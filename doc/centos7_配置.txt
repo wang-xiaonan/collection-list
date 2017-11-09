@@ -1,0 +1,93 @@
+在安装centos7时勾选ftp服务器选项，这样就不用安装vsftpd了
+
+查看服务状态
+systemctl status 
+
+启停vsftpd
+systemctl status  vsftpd.service
+systemctl start  vsftpd.service
+systemctl stop  vsftpd.service
+关闭开机启动
+systemctl disable  vsftpd.service
+
+关闭防火墙
+systemctl stop firewall
+关闭开机启动
+systemctl disable firewalld.service
+
+关闭SELinux
+/etc/selinux/config
+将SELINU置为disabled。
+
+安装tomcat
+1.解压安装包
+tar -zxvf apache-tomcat-7.0.59.tar.gz  -C  /usr/local
+2.可去/usr/local修改tomcat名字
+mv apache-tomat-7.0.59  tomcat7 
+3.修改tomcat中jre路径，在开头就行
+JRE_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.102-4.b14.el7.x86_64/jre
+4.在conf/Catalina/localhost/中添加应用地址
+uploads.xml
+<Context path="/uploads" docBase="/uploads" reloadable="true"/>
+5.tomcat启动测试
+6.开机启动tomcat
+	需要添加tomcat.pid文件（这个自动添加无需配置）
+	1.添加setenv.sh文件（vim setenv.sh）
+		#tomcat启动pid（需修改具体路径）
+		export CATALINA_HOME=/usr/local/tomcat7
+		export CATALINA_BASE=/usr/local/tomcat7
+		#add tomcat pid
+		CATALINA_PID="$CATALINA_BASE/tomcat.pid"
+		#add Java opts 虚拟机参数
+		JAVA_OPTS="-server -XX:PermSize=256M -XX:MaxPermSize=1024m -Xms512M -Xmx1024M -XX:MaxNewSize=256m"
+	2.增加tomcat.service（/usr/lib/systemd/system）--> vim tomcat7.service
+		##[unit]配置服务的描述，规定了在network启动之后执行，
+		[Unit]
+
+		Description=Tomcat
+		
+		After=syslog.target network.target remote-fs.target nss-lookup.target
+		
+		##[service]配置服务的pid，服务的启动，停止，重启
+		[Service]
+		
+		Type=forking
+		
+		PIDFile=/usr/local/tomcat7/tomcat.pid
+		
+		ExecStart=/usr/local/tomcat7/bin/startup.sh
+		
+		ExecReload=/bin/kill -s HUP $MAINPID
+		
+		ExecStop=/bin/kill -s QUIT $MAINPID
+		
+		PrivateTmp=true
+		
+		##[install]配置使用用户
+		[Install]
+		
+		WantedBy=multi-user.target
+	
+	3.添加到开机启动
+	systemctl enable tomcat7.service
+
+	查看全部服务命令：
+	systemctl list-unit-files --type service
+	查看服务
+	systemctl status name.service
+	启动服务
+	systemctl start name.service
+	停止服务
+	systemctl stop name.service
+	重启服务
+	systemctl restart name.service
+	增加开机启动
+	systemctl enable name.service
+	删除开机启动
+	systemctl disable name.service
+	其中.service 可以省略。
+	
+7.设置root用户可以访问
+vim /etc/vsftpd/ftpusers
+vim /etc/vsftpd/user_list
+把其中的root注释或者去掉就行了
