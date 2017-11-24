@@ -1,0 +1,4 @@
+// These settings override both User and Default settings for the Java Server Pages (JSP) syntax
+{
+	"tab_size": 2
+}
